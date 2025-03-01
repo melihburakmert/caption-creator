@@ -1,0 +1,83 @@
+version: '3.7'
+
+services:
+  api-gateway-service:
+    container_name: api-gateway-service
+    image: ${GCR_REGISTRY}/mbm/api-gateway-service:0.0.1-SNAPSHOT
+    ports:
+      - "8765:8765"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - backend-network
+
+  playback-data-service:
+    container_name: playback-data-service
+    image: ${GCR_REGISTRY}/mbm/playback-data-service:0.0.1-SNAPSHOT
+    ports:
+      - "8082:8082"
+    volumes:
+      - ..\playback-data-service\src\main\resources\playback-data-service-key.json:/src/main/resources/playback-data-service-key.json
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - APP_BASE_URL=http://localhost:8082/playback
+      - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/playback-data-service-key.json
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+    depends_on:
+      - api-gateway-service
+    networks:
+      - backend-network
+
+  lyrics-service:
+    container_name: lyrics-service
+    image: ${GCR_REGISTRY}/mbm/lyrics-service:0.0.1-SNAPSHOT
+    ports:
+      - "8083:8083"
+    volumes:
+      - ..\lyrics-service\src\main\resources\lyrics-service-key.json:/src/main/resources/lyrics-service-key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/lyrics-service-key.json
+    depends_on:
+      - api-gateway-service
+    networks:
+      - backend-network
+
+  genai-service:
+    container_name: genai-service
+    image: ${GCR_REGISTRY}/mbm/genai-service:0.0.1-SNAPSHOT
+    ports:
+      - "8084:8084"
+    volumes:
+      - ..\genai-service\src\main\resources\genai-service-key.json:/src/main/resources/genai-service-key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/genai-service-key.json
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_REGION=${GCP_REGION}
+    depends_on:
+      - api-gateway-service
+      - redis
+    networks:
+      - backend-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend-network
+    command: [ "redis-server", "--appendonly", "yes" ]
+
+volumes:
+  redis_data:
+    name: redis_data
+    driver: local
+
+networks:
+  backend-network:
+    name: backend-network
+    driver: bridge
