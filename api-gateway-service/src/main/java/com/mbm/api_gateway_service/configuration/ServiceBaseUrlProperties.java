@@ -12,4 +12,5 @@ import org.springframework.context.annotation.Configuration;
 public class ServiceBaseUrlProperties {
     private String playbackDataService;
     private String genAiService;
+    private String frontendService;
 }
