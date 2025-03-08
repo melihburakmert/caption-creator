@@ -17,15 +17,17 @@ services:
     ports:
       - "8082:8082"
     volumes:
-      - ..\playback-data-service\src\main\resources\playback-data-service-key.json:/src/main/resources/playback-data-service-key.json
+      - ..\..\playback-data-service\src\main\resources\playback-data-service-key.json:/src/main/resources/playback-data-service-key.json
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - APP_BASE_URL=http://localhost:8082/playback
       - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/playback-data-service-key.json
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}
     depends_on:
       - api-gateway-service
+      - redis
     networks:
       - backend-network
 
@@ -35,7 +37,7 @@ services:
     ports:
       - "8083:8083"
     volumes:
-      - ..\lyrics-service\src\main\resources\lyrics-service-key.json:/src/main/resources/lyrics-service-key.json
+      - ..\..\lyrics-service\src\main\resources\lyrics-service-key.json:/src/main/resources/lyrics-service-key.json
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/lyrics-service-key.json
     depends_on:
@@ -49,7 +51,7 @@ services:
     ports:
       - "8084:8084"
     volumes:
-      - ..\genai-service\src\main\resources\genai-service-key.json:/src/main/resources/genai-service-key.json
+      - ..\..\genai-service\src\main\resources\genai-service-key.json:/src/main/resources/genai-service-key.json
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/src/main/resources/genai-service-key.json
       - GCP_PROJECT_ID=${GCP_PROJECT_ID}
